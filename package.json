@@ -1,0 +1,18 @@
+{
+  "name": "AppNotas",
+  "version": "1.0.0",
+  "description": "Aplicacion de notas escrita con electron",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [],
+  "author": "Gabriel",
+  "license": "ISC",
+  "dependencies": {
+    "electron": "^3.0.10"
+  },
+  "devDependencies": {
+    "electron-reload": "^1.3.0"
+  }
+}

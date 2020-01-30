@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <title>Notas</title>
+    <link rel="stylesheet" href="./bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+
+    <div class="container-fluid p-4">
+      <div class="row" id="notes">
+      </div>
+    </div>
+
+    <!-- Logic -->
+    <script>
+      const { ipcRenderer } = require('electron');
+      // identifico donde guardar las notas nuevos
+      const notes = document.querySelector('#notes');
+
+      //capturo el evento de new-note.html
+      ipcRenderer.on('product:new', (e, newNote) => {
+        const newNotaTemplate = `
+        <div class="col-xs-4 p-2">
+        <div class="card text-center">
+            <div class="card-header">
+              <h5 class="card-title">${newNote.title}</h5>
+            </div>
+            <div class="card-body">              
+              ${newNote.content} $
+            </div>
+            <div class="card-footer">
+              <button class="btn btn-danger btn-sm">
+                DELETE
+              </button>
+            </div>
+        </div>
+        </div>
+      `;
+        
+        //añado la nueva nota al html
+        notes.innerHTML += newNotaTemplate;
+        //selecciono el boton de borrar
+        const btns = document.querySelectorAll('.btn.btn-danger');
+        btns.forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.target.parentElement.parentElement.parentElement.remove();
+            //HACER: ELIMINAR CON FS LA LINIA DEL ARCHIVO
+
+            
+          });
+        })
+      });
+
+      /* elimina todos los productos */
+      ipcRenderer.on('notes:remove-all', e => {
+        notes.innerHTML = '';
+      });
+
+      // Remove Single Product
+      function removeProduct(e) {
+      }
+    </script>
+  </body>
+</html>

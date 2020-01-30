@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <title>Nueva nota</title>
+    <link rel="stylesheet" href="./bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+
+    <!-- Interface -->
+    <form class="p-4">
+      <div class="form-group">
+        <input type="text" id="title" class="form-control" placeholder="Titulo nueva nota" autofocus>
+      </div>
+      <div class="form-group">      
+        <label for="exampleTextarea">Nueva nota</label>
+        <textarea class="form-control" id="contenidoNota" rows="13"></textarea>
+      </div>
+      
+      <button class="btn btn-primary btn-block">
+        Guardar
+      </button>
+    </form>
+
+    <!-- Logic -->
+    <script>      
+      //modulo para la comunicacion entre ventanas
+      const { ipcRenderer } = require('electron');
+      //selecciono el formulario
+      const form = document.querySelector('form');
+      form.addEventListener('submit', e => {
+        e.preventDefault(); //cancelo el envio de datos del form
+        //recojo los valores del formulario
+        const titleNote =  document.querySelector('#title').value; 
+        const contentNote = document.querySelector('#contenidoNota').value;
+        //creo el objeto con los valores
+        const newNote = {
+          title: titleNote,
+          content: contentNote
+        };
+
+        //mando los datos
+        ipcRenderer.send('product:new', newNote);
+      });
+    </script>
+
+  </body>
+</html>
