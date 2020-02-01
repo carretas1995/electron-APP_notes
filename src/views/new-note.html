@@ -33,6 +33,8 @@
         e.preventDefault(); //cancelo el envio de datos del form
         //recojo los valores del formulario
         const titleNote =  document.querySelector('#title').value; 
+
+        //probar .replace("\n", "<br />")   con text area
         const contentNote = document.querySelector('#contenidoNota').value;
         //creo el objeto con los valores
         const newNote = {

@@ -16,11 +16,11 @@ let newNoteWindow;
 let acercaDeWindow;
 
 /* para recargar la aplicacion solo en produccion */
-if(process.env.NODE_ENV !== 'production') {
+/* if(process.env.NODE_ENV !== 'production') {
   require('electron-reload')(__dirname, {
     electron: path.join(__dirname, '../node_modules', '.bin', 'electron')
   });
-}
+} */
 
 /* al iniciar la aplicacion */
 app.on('ready', () => {
@@ -112,10 +112,38 @@ function importBackup() {
   }, function (files) {
       //si no esta vacio files== ruta del archivo seleccionado
       if (files !== undefined) {
-        console.log(files);
+        //compruebo si existe dataNotes.txt y si no lo creo
+        fileDataExists();
+        //ahora compruebo si existe el archivo de backup
+        if (fs.existsSync(files[0])){
+          //copio el contenido del backup a dataNotes.txt
+          fs.readFile(files[0], 'utf8', function (err, contentsBackup) {
+            //array con las lineas del archivo
+            let contenidoBackup = contentsBackup.split("\n");
+            //vacio el archivo dataNotes.txt
+            fs.truncate('dataNotes.txt', 0, function (err) {if (err) {} });
+            //ahora sobreescrivo el archivo dataNotes.txt con el contenido del backup importado
+            //recorro el array con el contenido del backup
+            contenidoBackup.forEach(element => {
+              fs.createWriteStream("dataNotes.txt", { flags: 'a' }).write(element + "\n");            
+            });
+          });
+        }else{
+          errorMessage('Ruta invalida o fichero dañado');
+        }
+        //recargo la ventana despues de importar
+        mainWindow.reload();        
+      }else{
+        errorMessage('No se a cargado ningun archivo');
       }
   });
 }
+
+
+//HAY UN PROIBLEMA, no se respeta el salto de linea en las notas
+
+
+
 
 
 /* funcion que carga las notas guardadas al cargar el programa */
@@ -124,7 +152,10 @@ function loadDataNotes() {
   if (fs.existsSync('dataNotes.txt')) {
     fs.readFile('dataNotes.txt', 'utf8', function (err, contents) {
       //Creo el array con el contenido del archivo cortando por linea
-      let contenido = contents.split("\n");
+      //let contenido = contents.split("\n");
+      let contenido = contents.split("%!");
+      //elimino el retorno de carro del array (ultimo elemento)
+      contenido.pop();
       //recorro el array y corto por el caracter de control "|%"
       contenido.forEach(element => {
         if(element != ''){
@@ -133,16 +164,33 @@ function loadDataNotes() {
           //creo el objeto
           const newNote = {
             title: partes[0],
-            content: partes[1]
+            content: partes[1],
+            id: contenido.indexOf(element) //id para despues borrar la nota
           };
 
           //cuando el proceso estea listo para escuchar mando los datos
           mainWindow.webContents.on('did-finish-load', () => {    
             //mando los datos a la pantalla principal
-            mainWindow.webContents.send('product:new', newNote);
+            mainWindow.webContents.send('notes:load', newNote);
           });
         }
       });
+
+      if (err) {
+        errorMessage('Error al cargar las notas guardadas"');
+      }
+    });
+  }  
+}
+
+/* funcion que comprueba si el archivo dataNotes.txt existe, y si no lo crea */
+function fileDataExists(){
+  //creo el archivo si no existe
+  if (!fs.existsSync('dataNotes.txt')){
+    fs.appendFile('dataNotes.txt','',(error) => {
+      if(error){
+        errorMessage('Error al crear el archivo de respaldo');
+      }
     });
   }
 }
@@ -150,22 +198,24 @@ function loadDataNotes() {
 /* funcion para guardar las notas en un archivo */
 function saveInFile(nota) {
   //creo el archivo si no existe
-  if (!fs.existsSync('dataNotes.txt')){
+  /* if (!fs.existsSync('dataNotes.txt')){
     fs.appendFile('dataNotes.txt','',(error) => {
       if(error){}
     });
-  }
-
+  } */
+  fileDataExists();
   //guardo el nuevo contenido
   var stream = fs.createWriteStream("dataNotes.txt", { flags: 'a' });
-  stream.write(nota.title + '|%' + nota.content + "\n");
+  //stream.write(nota.title + '|%' + nota.content + "\n");
+  //intento solucion carga fallida con saltros de linea
+  stream.write(nota.title + '|%' + nota.content + '%!' + "\n");
 }
 
 /* elimina el archivo al eliminar todas las notas */
 function deleteDataNotes() {
   fs.unlink("dataNotes.txt", (err) => {
     if (err) {
-      
+      errorMessage('Error al eliminar el archivo "dataNotes.txt"');
     }
   });
 }
@@ -173,12 +223,12 @@ function deleteDataNotes() {
 /* escucho el evento de guardar una nueva nota */
 ipcMain.on('product:new', (e, newProduct) => {
   // send to the Main Window
-  console.log(newProduct);
+  //console.log(newProduct);
   mainWindow.webContents.send('product:new', newProduct);
   //guardo la nota en archivo
-  saveInFile(newProduct);
+  saveInFile(newProduct);  
   //cierro la ventana de nueva nota
-  newNoteWindow.close();
+  newNoteWindow.close();  
 });
 
 
@@ -262,4 +312,23 @@ if (process.env.NODE_ENV !== 'production') {
       }
     ]
   })
+}
+
+/* funcion que envia un mensaje de error a la ventana principal */
+function errorMessage(message) {
+  //cuando el proceso estea listo para escuchar mando los datos
+  mainWindow.webContents.on('did-finish-load', () => {
+    //mando los datos a la pantalla principal
+    mainWindow.webContents.send('error:alert', message);
+  });
+}
+
+
+/* funcion que envia un mensaje de ok */
+function okMessage(message) {
+  //cuando el proceso estea listo para escuchar mando los datos
+  mainWindow.webContents.on('did-finish-load', () => {
+    //mando los datos a la pantalla principal
+    mainWindow.webContents.send('ok:alert', message);
+  });
 }

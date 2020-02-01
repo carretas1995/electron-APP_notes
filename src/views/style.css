@@ -9,5 +9,46 @@ body{
 
 
 .card {
-  width: 200px;
+  min-width: 200px;
+  width: auto;
+  /* width: 200px;
+} */
+
+.card-title{
+  margin-bottom: 0;
+}
+
+.card-body{
+  min-height: 113px;
+  padding: 10px;
+  display: flex;
+}
+
+#notes{
+  display: flex;
+  justify-content: center;
+}
+
+#mensajes{
+  height: 46px;
+  width: 100%;
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+#mensaje{
+  text-align: center;
+  background-color: #f7dddc;
+  padding: 16px;
+  color: #721c24;
+  border-radius: 8px;
+}
+
+#mensajeOK{
+  text-align: center;
+  background-color: #d4edda;
+  padding: 16px;
+  color: #155724;
+  border-radius: 8px;
 }
