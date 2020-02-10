@@ -83,11 +83,13 @@ function createAcercaDe() {
   acercaDeWindow = new BrowserWindow({
     width: 300,
     height: 250,
+    resizable: false,
+    icon: image,
     title: 'Acerca de'
   });
 
   //quito el navbar
-/*   acercaDeWindow.setMenu(null); */
+   acercaDeWindow.setMenu(null);
 
   //cargo el acerca-de.html
   acercaDeWindow.loadURL(url.format({
@@ -102,7 +104,7 @@ function createAcercaDe() {
   });
 }
 
-/* dialogo para importar backup  EN CONSTRUCCION*/
+/* dialogo para importar backup */
 function importBackup() {
   dialog.showOpenDialog({ 
     properties: ['openFile', 'multiSelections'],
@@ -139,11 +141,23 @@ function importBackup() {
   });
 }
 
-
-//HAY UN PROIBLEMA, no se respeta el salto de linea en las notas
-
-
-
+/* exporta el backup a la localizacion deseada */
+function exportBackup() {
+  dialog.showSaveDialog({
+    filters: [{
+      name: 'Backup_notas',
+      extensions: ['txt']
+    }]
+  }, function (files) {   
+      //compruebo si existe dataNotes.txt y creo el backup
+      if (fs.existsSync('dataNotes.txt')){
+        //copio el archivo a la ubicacion seleccionada 
+        fs.createReadStream('dataNotes.txt').pipe(fs.createWriteStream(files));
+      }else{
+        errorMessage('Error al exportar la copia');
+      }
+  });
+}
 
 
 /* funcion que carga las notas guardadas al cargar el programa */
@@ -206,13 +220,15 @@ function saveInFile(nota) {
   fileDataExists();
   //guardo el nuevo contenido
   var stream = fs.createWriteStream("dataNotes.txt", { flags: 'a' });
-  //stream.write(nota.title + '|%' + nota.content + "\n");
   //intento solucion carga fallida con saltros de linea
-  stream.write(nota.title + '|%' + nota.content + '%!' + "\n");
+  stream.write(nota.title + '|%' + nota.content + '%!' + "\n");  
+  //cierro el stream
+  stream.end();
 }
 
 /* elimina el archivo al eliminar todas las notas */
 function deleteDataNotes() {
+  
   fs.unlink("dataNotes.txt", (err) => {
     if (err) {
       errorMessage('Error al eliminar el archivo "dataNotes.txt"');
@@ -223,13 +239,13 @@ function deleteDataNotes() {
 /* escucho el evento de guardar una nueva nota */
 ipcMain.on('product:new', (e, newProduct) => {
   // send to the Main Window
-  //console.log(newProduct);
   mainWindow.webContents.send('product:new', newProduct);
   //guardo la nota en archivo
   saveInFile(newProduct);  
   //cierro la ventana de nueva nota
   newNoteWindow.close();  
 });
+
 
 
 // Menu Template
@@ -253,22 +269,33 @@ const templateMenu = [
           deleteDataNotes();
         }
 
-      },
-      {
-        label: 'Importar Backup(txt)',
-        click() {
-          importBackup();
-        }
-      },
+      },      
       {
         label: 'Recargar',
-        role: 'reload'
+        role: 'reload'       
       },
       {
         label: 'Salir',
         accelerator: process.platform == 'darwin' ? 'command+Q' : 'Ctrl+Q',
         click() {
           app.quit();
+        }
+      }
+    ]
+  },
+  {
+    label: 'Respaldo',
+    submenu: [
+      {        
+        label: 'Importar Backup(txt)',
+        click() {
+          importBackup();
+        }
+      },
+      {
+        label: 'Exportar Backup',
+        click() {
+          exportBackup();
         }
       }
     ]

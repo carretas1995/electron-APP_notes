@@ -15,7 +15,7 @@
       </div>
       <div class="form-group">      
         <label for="exampleTextarea">Nueva nota</label>
-        <textarea class="form-control" id="contenidoNota" rows="13"></textarea>
+        <textarea class="form-control" id="contenidoNota" rows="13" wrap="hard"></textarea>
       </div>
       
       <button class="btn btn-primary btn-block">
@@ -35,7 +35,7 @@
         const titleNote =  document.querySelector('#title').value; 
 
         //probar .replace("\n", "<br />")   con text area
-        const contentNote = document.querySelector('#contenidoNota').value;
+        const contentNote = document.querySelector('#contenidoNota').value.replace(/\n/g, "<br />");
         //creo el objeto con los valores
         const newNote = {
           title: titleNote,
